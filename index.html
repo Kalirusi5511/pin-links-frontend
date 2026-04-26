@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIN & Links</title>
+
+<style>
+body {
+  background:#0f0f0f;
+  color:white;
+  font-family:sans-serif;
+  padding:20px;
+}
+input, button {
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:8px;
+  border:none;
+}
+button {
+  background:#38bdf8;
+  font-weight:bold;
+  cursor:pointer;
+}
+.link {
+  background:#1a1a1a;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🔗 Links</h2>
+
+<button onclick="login()">🔐 Admin Login</button>
+<button onclick="requestReset()">❓ PIN vergessen?</button>
+
+<div id="admin" style="display:none;">
+  <input id="title" placeholder="Titel">
+  <input id="url" placeholder="URL">
+  <button onclick="addLink()">+ Link</button>
+</div>
+
+<div id="links"></div>
+
+<script>
+const BACKEND = "https://DEIN_BACKEND_URL";
+
+let role = "viewer";
+let links = JSON.parse(localStorage.getItem("links") || "[]");
+
+// anzeigen
+function render(){
+  const div = document.getElementById("links");
+  div.innerHTML = "";
+
+  links.forEach((l,i)=>{
+    const el = document.createElement("div");
+    el.className = "link";
+    el.innerHTML = `<a href="${l.url}" target="_blank">${l.title}</a>`;
+
+    if(role==="owner"){
+      const del = document.createElement("button");
+      del.textContent="Löschen";
+      del.onclick=()=>{
+        links.splice(i,1);
+        save();
+      };
+      el.appendChild(del);
+    }
+
+    div.appendChild(el);
+  });
+
+  document.getElementById("admin").style.display =
+    role==="owner" ? "block" : "none";
+}
+
+function save(){
+  localStorage.setItem("links", JSON.stringify(links));
+  render();
+}
+
+// login
+function login(){
+  const pin = prompt("PIN:");
+  const stored = localStorage.getItem("pin") || "5422";
+
+  if(pin === stored){
+    role="owner";
+    render();
+  } else {
+    alert("Falsch");
+  }
+}
+
+// link hinzufügen
+function addLink(){
+  const t = document.getElementById("title").value;
+  const u = document.getElementById("url").value;
+
+  if(t && u){
+    links.push({title:t,url:u});
+    save();
+  }
+}
+
+// 🔥 RESET ANFORDERN
+async function requestReset(){
+  const email = prompt("Deine Gmail:");
+
+  if(!email) return;
+
+  try{
+    await fetch(BACKEND + "/request-reset", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({ email })
+    });
+
+    alert("📧 Reset Mail gesendet");
+  }catch(e){
+    alert("Fehler beim Senden");
+  }
+}
+
+render();
+</script>
+
+</body>
+</html>

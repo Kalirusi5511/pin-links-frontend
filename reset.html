@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>PIN Reset</title>
+
+<style>
+body {
+  background:#0f0f0f;
+  color:white;
+  font-family:sans-serif;
+  padding:20px;
+}
+input,button{
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border-radius:8px;
+  border:none;
+}
+button{
+  background:#22c55e;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🔑 PIN zurücksetzen</h2>
+
+<input id="pin" placeholder="Neuer PIN">
+<button onclick="resetPin()">Speichern</button>
+
+<script>
+const BACKEND = "https://DEIN_BACKEND_URL";
+
+// token holen
+const params = new URLSearchParams(window.location.search);
+const token = params.get("token");
+
+async function resetPin(){
+  const newPin = document.getElementById("pin").value;
+
+  if(!newPin){
+    alert("PIN fehlt");
+    return;
+  }
+
+  try{
+    await fetch(BACKEND + "/reset-pin", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body: JSON.stringify({
+        token,
+        newPin
+      })
+    });
+
+    // 🔥 speichern lokal
+    localStorage.setItem("pin", newPin);
+
+    alert("✅ PIN geändert");
+  }catch(e){
+    alert("Fehler");
+  }
+}
+</script>
+
+</body>
+</html>
